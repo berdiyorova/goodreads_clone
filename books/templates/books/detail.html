@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Book Detail Page{% endblock %}
+
+{% block content %}
+
+    <div class="row mb-5">
+        <div class="col-2">
+            <img class="cover-pic" src="{{ book.cover_picture.url }}" alt="Cover Image">
+        </div>
+        <div class="col-8 ms-4">
+            <h3 class="fw-bold">{{ book.title }}</h3>
+
+            <span class="fst-italic">
+                Authored by
+                {% for book_author in book.bookauthor_set.all %}
+                    {% if forloop.last %}
+                        <strong>{{book_author.author.full_name}}</strong>
+                    {% else %}
+                        <strong>{{book_author.author.full_name}}</strong>,
+                    {% endif %}
+                {% endfor %}
+            </span>
+
+            <p class="font-monospace">{{ book.description }}</p>
+        </div>
+    </div>
+
+    <div class="row mb-4 ms-5">
+        <div class="col-7">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                Add review
+            </button>
+
+            <div class="collapse" id="collapseExample">
+                <div class="card card-body">
+                    <form action="{% url 'books:reviews' book.id %}" method="post">
+                        {% csrf_token %}
+                        {{ review_form | crispy }}
+                        <button class="btn btn-outline-success me-0" type="submit">Add review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if book.reviews.exists %}
+        <h4 class="ms-5">Reviews</h4> <hr>
+
+        {% for review in book.reviews.all %}
+            <div class="row mb-4">
+                <div class="col-1 me-1">
+                    <img class="small-profile-pic" src="{{ review.user.photo.url }}">
+                </div>
+                <div class="col-7">
+                    <span class="fw-bold">{{ review.user.username }}</span> rated it {{ review.stars_given }} stars
+                    <span class=" fst-italic">{{ review.created_at }}</span>
+                    {% if review.user == request.user %}
+                        <a href="{% url 'books:edit_review' book.id review.id %}"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'books:confirm_delete_review' book.id review.id %}"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                    <p class="text-muted mt-2">{{ review.comment }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+{% endblock %}
